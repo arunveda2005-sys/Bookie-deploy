@@ -1,117 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactPlayer from 'react-player';
 import { api } from '../api/client';
-import { FiBookmark, FiClock, FiShare2, FiThumbsUp, FiCpu, FiTv, FiCalendar, FiPlay, FiHeart, FiEye, FiTrendingUp } from 'react-icons/fi';
+import { FiBookmark, FiClock, FiShare2, FiCpu, FiTv, FiCalendar, FiPlay, FiHeart, FiEye, FiTrendingUp, FiSearch, FiCheckSquare } from 'react-icons/fi';
 import BookmarksList from './BookmarksList';
 import SearchTest from './SearchTest';
-
-const SummaryModal = ({ summary, onClose }) => {
-    if (!summary) return null;
-
-    if (typeof summary === 'string') {
-        return (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-                <div className="bg-gradient-to-br from-[#1d1d2b] to-[#15151c] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[#2a2a3f]/50 shadow-2xl p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                            Video Summary
-                        </h2>
-                    </div>
-                    <div className="bg-[#242435]/40 p-4 rounded-xl border border-[#2a2a3f]/50">
-                        <p className="text-gray-300 text-sm whitespace-pre-line leading-relaxed">{summary}</p>
-                    </div>
-                    <div className="mt-6 flex justify-end">
-                        <button
-                            onClick={onClose}
-                            className="px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all"
-                        >
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto animate-fadeIn">
-            <div className="bg-gradient-to-br from-[#1d1d2b] to-[#15151c] rounded-2xl max-w-3xl w-full border border-[#2a2a3f]/50 shadow-2xl overflow-hidden">
-                <div className="p-6">
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <h2 className="text-xl font-bold text-white">
-                                {summary.title || 'Video AI Summary'}
-                            </h2>
-                            {summary.category && (
-                                <span className="inline-block mt-2 px-2.5 py-0.5 text-xs font-semibold bg-blue-900/30 text-blue-300 rounded-full border border-blue-800/30">
-                                    {summary.category}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-1">
-                        {summary.overview && (
-                            <div>
-                                <h3 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">Overview</h3>
-                                <div className="bg-[#242435]/40 p-4 rounded-xl border border-[#2a2a3f]/50">
-                                    <p className="text-gray-300 text-sm leading-relaxed">{summary.overview}</p>
-                                </div>
-                            </div>
-                        )}
-
-                        {summary.learning_outcome && (
-                            <div className="p-4 bg-indigo-950/20 rounded-xl border border-indigo-900/30">
-                                <h3 className="text-sm font-bold text-indigo-300 mb-1 flex items-center gap-2">
-                                    <FiCpu className="h-4 w-4" /> Key Learning Outcome
-                                </h3>
-                                <p className="text-indigo-100 text-sm leading-relaxed">{summary.learning_outcome}</p>
-                            </div>
-                        )}
-
-                        {Array.isArray(summary.summary) && summary.summary.length > 0 && (
-                            <div>
-                                <h3 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">Key Takeaways</h3>
-                                <ul className="space-y-2.5">
-                                    {summary.summary.map((point, i) => (
-                                        <li key={i} className="flex items-start">
-                                            <span className="h-5 w-5 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold flex items-center justify-center mt-0.5 mr-3 flex-shrink-0">
-                                                {i + 1}
-                                            </span>
-                                            <span className="text-gray-300 text-sm leading-relaxed">{point}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
-                        {Array.isArray(summary.action_items) && summary.action_items.length > 0 && (
-                            <div>
-                                <h3 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">Action Items</h3>
-                                <ul className="space-y-2">
-                                    {summary.action_items.map((item, i) => (
-                                        <li key={i} className="flex items-start text-xs text-green-300 leading-relaxed pl-1">
-                                            • {item}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="mt-6 flex justify-end">
-                        <button
-                            onClick={onClose}
-                            className="px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all"
-                        >
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 export default function VideoPlayer({ videoId, setVideoId }) {
     const [currentTime, setCurrentTime] = useState(0);
@@ -121,13 +13,14 @@ export default function VideoPlayer({ videoId, setVideoId }) {
     const [error, setError] = useState(null);
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [summary, setSummary] = useState(null);
-    const [showSummaryModal, setShowSummaryModal] = useState(false);
     const [relatedVideos, setRelatedVideos] = useState([]);
+    const [activeTab, setActiveTab] = useState('description'); // 'description' | 'summary' | 'search'
     const [liked, setLiked] = useState(() => {
         return localStorage.getItem(`liked_${videoId}`) === 'true';
     });
     
     const playerRef = useRef(null);
+    const insightsRef = useRef(null);
 
     // Compute mock statistics that are persistent per video ID
     const viewsCount = ((videoId * 17923 + 1259) % 250000).toLocaleString();
@@ -226,15 +119,7 @@ export default function VideoPlayer({ videoId, setVideoId }) {
 
     const handleExportSummary = async () => {
         try {
-            if (!summary) {
-                const shouldGenerate = window.confirm(
-                    "No summary found. Would you like to generate one first?"
-                );
-                if (shouldGenerate) {
-                    await handleSummarizeVideo();
-                }
-                return;
-            }
+            if (!summary) return;
 
             let markdownContent = `# ${summary.title || 'Video Summary'}\n\n`;
             if (summary.category) markdownContent += `**Category:** ${summary.category}\n\n`;
@@ -260,13 +145,21 @@ export default function VideoPlayer({ videoId, setVideoId }) {
             URL.revokeObjectURL(url);
         } catch (err) {
             console.error('Export summary failed:', err);
-            alert('Failed to export summary. Please try generating a summary first.');
+            alert('Failed to export summary.');
         }
     };
 
     const handleSummarizeVideo = async () => {
+        setActiveTab('summary');
+        if (summary) {
+            // Scroll to insights panel
+            insightsRef.current?.scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+
         try {
             setIsSummarizing(true);
+            insightsRef.current?.scrollIntoView({ behavior: 'smooth' });
             const response = await api.summarizeVideo(videoId);
             let summaryData = response.summary || response;
 
@@ -297,7 +190,6 @@ export default function VideoPlayer({ videoId, setVideoId }) {
             };
 
             setSummary(formattedSummary);
-            setShowSummaryModal(true);
         } catch (err) {
             console.error('Failed to summarize video:', err);
             alert(err.message || 'Failed to generate video summary. Please try again.');
@@ -305,8 +197,6 @@ export default function VideoPlayer({ videoId, setVideoId }) {
             setIsSummarizing(false);
         }
     };
-
-    const closeSummaryModal = () => setShowSummaryModal(false);
 
     if (error) {
         return (
@@ -334,7 +224,7 @@ export default function VideoPlayer({ videoId, setVideoId }) {
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            {/* Left: Video Player & Description Details */}
+            {/* Left: Video Player & Collapsible insights */}
             <div className="lg:col-span-2 flex flex-col min-w-0">
                 {/* Video Player Card */}
                 <div className="bg-[#191924]/60 border border-[#262637]/50 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md transition-all duration-300 hover:shadow-blue-500/5">
@@ -349,124 +239,239 @@ export default function VideoPlayer({ videoId, setVideoId }) {
                     />
                 </div>
 
-                {/* Details Section */}
-                <div className="mt-6 space-y-5">
-                    {/* Header Row: Channel Info and Actions */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#262637]/40">
-                        {/* Channel Details */}
-                        <div className="flex items-center gap-3">
-                            <div className="h-11 w-11 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center font-bold text-sm text-white shadow-lg shadow-blue-500/10">
-                                AI
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
-                                    VideoInsight Engine
-                                    <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                                </h4>
-                                <p className="text-xs text-[#82829b]">Active AI Analyzer</p>
-                            </div>
+                {/* Details Toolbar Section */}
+                <div className="mt-5 space-y-4">
+                    {/* Title */}
+                    <h1 className="text-lg md:text-xl font-extrabold text-white tracking-tight leading-snug">
+                        {videoInfo?.filename}
+                    </h1>
+
+                    {/* Metadata indicators & action row - Super Clean */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#262637]/45">
+                        
+                        {/* Compact Stats Indicators */}
+                        <div className="flex flex-wrap items-center gap-4 text-[11px] text-[#82829b] font-medium">
+                            <span className="flex items-center gap-1">
+                                <FiEye className="h-3.5 w-3.5 text-blue-400" />
+                                {viewsCount} views
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <FiHeart className="h-3.5 w-3.5 text-rose-400" />
+                                {likesCount} likes
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <FiTrendingUp className="h-3.5 w-3.5 text-green-400" />
+                                {streamingCount} active
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <FiCalendar className="h-3.5 w-3.5 text-purple-400" />
+                                {new Date(videoInfo?.upload_date).toLocaleDateString()}
+                            </span>
                         </div>
 
-                        {/* Functional Action Buttons */}
-                        <div className="flex items-center gap-2.5 flex-wrap">
+                        {/* Direct Control Buttons */}
+                        <div className="flex items-center gap-2 flex-wrap">
                             <button
                                 onClick={handleToggleLike}
-                                className={`px-4.5 py-2.5 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-md ${
+                                className={`px-3.5 py-2 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-sm ${
                                     liked
                                         ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20'
                                         : 'bg-[#191924] hover:bg-[#20202f] border border-[#262637] text-white hover:text-rose-400'
                                 }`}
                             >
-                                <FiHeart className={`h-4 w-4 ${liked ? 'fill-white' : ''}`} />
+                                <FiHeart className={`h-3.5 w-3.5 ${liked ? 'fill-white' : ''}`} />
                                 {liked ? 'Liked' : 'Like'}
                             </button>
 
                             <button
                                 onClick={() => createBookmark()}
-                                className="px-4.5 py-2.5 text-xs font-bold bg-[#191924]/80 hover:bg-[#20202f] border border-[#262637] text-white rounded-xl flex items-center gap-1.5 transition-all shadow-md"
+                                className="px-3.5 py-2 text-xs font-bold bg-[#191924]/80 hover:bg-[#20202f] border border-[#262637] text-white rounded-xl flex items-center gap-1.5 transition-all shadow-sm"
                             >
-                                <FiBookmark className="h-4 w-4 text-blue-400" />
-                                Bookmark Note
+                                <FiBookmark className="h-3.5 w-3.5 text-blue-400" />
+                                Bookmark
                             </button>
 
                             <button
                                 onClick={handleSummarizeVideo}
-                                disabled={isSummarizing}
-                                className={`px-4.5 py-2.5 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-md ${
-                                    isSummarizing
-                                        ? 'bg-purple-900/30 text-purple-300 cursor-not-allowed border border-purple-800/20'
-                                        : 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-600/20'
-                                }`}
+                                className="px-3.5 py-2 text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/10"
                             >
-                                {isSummarizing ? (
-                                    <>
-                                        <span className="inline-block animate-spin rounded-full h-3 w-3 border-b-2 border-white"></span>
-                                        Summarizing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <FiCpu className="h-4 w-4" />
-                                        AI Summary
-                                    </>
-                                )}
+                                <FiCpu className="h-3.5 w-3.5" />
+                                Summarize
                             </button>
 
                             <button
                                 onClick={handleExport}
-                                className="px-4 py-2.5 text-xs font-bold bg-[#1d1d2b] border border-[#2a2a3f] hover:border-gray-500 rounded-xl text-[#eaeaf0] transition-all"
-                                title="Export bookmarks as markdown file"
+                                className="px-3.5 py-2 text-xs font-bold bg-[#1d1d2b] border border-[#2a2a3f] hover:border-gray-500 rounded-xl text-[#eaeaf0] transition-all"
                             >
-                                <FiShare2 className="h-3.5 w-3.5 inline mr-1" /> Export
+                                <FiShare2 className="h-3 w-3 inline" /> Export
                             </button>
-                        </div>
-                    </div>
-
-                    {/* Title */}
-                    <h1 className="text-xl md:text-2xl font-extrabold text-white tracking-tight leading-snug">
-                        {videoInfo?.filename}
-                    </h1>
-
-                    {/* Split: Description (Left) & Stats (Right) */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                        {/* Description Paragraph */}
-                        <div className="md:col-span-2 space-y-3">
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-[#82829b]">Description</h3>
-                            <p className="text-sm text-gray-300 leading-relaxed bg-[#20202f]/25 border border-[#2a2a3f]/30 p-4 rounded-xl font-normal">
-                                This video was transcribed, fully indexed, and analyzed using our automatic machine learning pipeline. 
-                                Use the Interactive Study Log or AI Semantic Search below to navigate to key discussions, topics, and definitions instantly.
-                            </p>
-                        </div>
-
-                        {/* Stats Panel */}
-                        <div className="md:col-span-1 bg-[#191924]/40 border border-[#262637]/50 rounded-xl p-4 space-y-3">
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-[#82829b] mb-1">Video Metrics</h3>
-                            
-                            <div className="flex items-center gap-2.5 text-xs text-gray-300">
-                                <FiEye className="h-4 w-4 text-blue-400" />
-                                <span><strong>{viewsCount}</strong> views</span>
-                            </div>
-
-                            <div className="flex items-center gap-2.5 text-xs text-gray-300">
-                                <FiHeart className="h-4 w-4 text-rose-400" />
-                                <span><strong>{likesCount}</strong> likes</span>
-                            </div>
-
-                            <div className="flex items-center gap-2.5 text-xs text-gray-300">
-                                <FiTrendingUp className="h-4 w-4 text-green-400" />
-                                <span><strong>{streamingCount}</strong> active learners</span>
-                            </div>
-
-                            <div className="flex items-center gap-2.5 text-xs text-gray-300">
-                                <FiCalendar className="h-4 w-4 text-purple-400" />
-                                <span className="truncate">Uploaded: {new Date(videoInfo?.upload_date).toLocaleDateString()}</span>
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Bottom Semantic Search Card */}
-                <div className="mt-8">
-                    <SearchTest videoId={videoId} onResultClick={handleSeek} />
+                {/* Unified Insights Card Panel - Super Clean Tabs */}
+                <div ref={insightsRef} className="mt-6 glass-card rounded-2xl p-5 shadow-2xl relative overflow-hidden">
+                    {/* Tab Selectors */}
+                    <div className="flex gap-2 mb-5 border-b border-[#262637]/40 pb-3">
+                        <button
+                            onClick={() => setActiveTab('description')}
+                            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                                activeTab === 'description'
+                                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/10'
+                                    : 'text-[#82829b] hover:text-white hover:bg-[#20202f]/60'
+                            }`}
+                        >
+                            Description
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('summary')}
+                            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+                                activeTab === 'summary'
+                                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/10'
+                                    : 'text-[#82829b] hover:text-white hover:bg-[#20202f]/60'
+                            }`}
+                        >
+                            <FiCpu className="h-3 w-3" /> AI Summary
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('search')}
+                            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+                                activeTab === 'search'
+                                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10'
+                                    : 'text-[#82829b] hover:text-white hover:bg-[#20202f]/60'
+                            }`}
+                        >
+                            <FiSearch className="h-3 w-3" /> Transcript Search
+                        </button>
+                    </div>
+
+                    {/* Tab Contents */}
+                    <div className="min-h-[160px]">
+                        {/* Tab: Description */}
+                        {activeTab === 'description' && (
+                            <div className="space-y-3.5 animate-fadeIn">
+                                <p className="text-xs text-gray-300 leading-relaxed font-normal bg-[#20202f]/20 p-4 border border-[#2a2a3f]/30 rounded-xl">
+                                    This educational video has been parsed by Whisper speech-to-text models. 
+                                    You can query parts of the timeline semantically or trigger the AI summarizer to extract key takeaways. 
+                                    Bookmarks created by clicking "Bookmark" or typing in the chat log will sync instantly with the video frames.
+                                </p>
+                                <div className="flex items-center gap-2 text-[10px] text-[#82829b] font-mono px-1">
+                                    <span>Status: <strong className="text-green-400 uppercase">{videoInfo?.status}</strong></span>
+                                    <span>•</span>
+                                    <span>ID: {videoId}</span>
+                                    <span>•</span>
+                                    <span>Time: {Math.floor(currentTime / 60)}:{(Math.floor(currentTime % 60)).toString().padStart(2, '0')}</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tab: AI Summary */}
+                        {activeTab === 'summary' && (
+                            <div className="space-y-4 animate-fadeIn">
+                                {isSummarizing ? (
+                                    <div className="py-12 text-center flex flex-col items-center justify-center gap-3">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                                        <p className="text-xs text-gray-400">Consulting Llama 3 model for full video synthesis...</p>
+                                    </div>
+                                ) : !summary ? (
+                                    <div className="py-8 text-center flex flex-col items-center justify-center gap-4 bg-[#20202f]/10 border border-dashed border-[#2a2a3f]/50 rounded-xl">
+                                        <FiCpu className="h-9 w-9 text-[#585870] animate-pulse" />
+                                        <div className="space-y-1">
+                                            <h4 className="text-xs font-bold text-white">Full Video Summarization</h4>
+                                            <p className="text-[11px] text-gray-400 max-w-xs mx-auto leading-relaxed">
+                                                Generate an automated overview, learning outcomes, key takeaways, and action items in one click.
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={handleSummarizeVideo}
+                                            className="px-5 py-2 text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all shadow-md shadow-purple-600/20"
+                                        >
+                                            ⚡ Generate AI Summary
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-5">
+                                        {/* Header Title & Categories */}
+                                        <div className="flex justify-between items-start gap-4">
+                                            <h3 className="text-sm font-bold text-white">
+                                                {summary.title || 'Synthesis Output'}
+                                            </h3>
+                                            <span className="px-2.5 py-0.5 text-[10px] font-bold bg-purple-900/30 text-purple-300 rounded-full border border-purple-800/30">
+                                                {summary.category || 'General'}
+                                            </span>
+                                        </div>
+
+                                        {/* Overview Paragraph */}
+                                        {summary.overview && (
+                                            <div className="bg-[#20202f]/30 p-3.5 rounded-xl border border-[#2a2a3f]/40">
+                                                <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">Overview</h4>
+                                                <p className="text-xs text-gray-300 leading-relaxed font-normal">{summary.overview}</p>
+                                            </div>
+                                        )}
+
+                                        {/* Outcomes Highlight box */}
+                                        {summary.learning_outcome && (
+                                            <div className="p-3.5 bg-indigo-950/20 rounded-xl border border-indigo-900/30">
+                                                <h4 className="text-[11px] font-bold text-indigo-300 flex items-center gap-1.5 mb-1.5">
+                                                    <FiCpu className="h-3.5 w-3.5" /> Key Learning Outcome
+                                                </h4>
+                                                <p className="text-indigo-100/90 text-xs leading-relaxed font-normal">{summary.learning_outcome}</p>
+                                            </div>
+                                        )}
+
+                                        {/* Key Points Takeaways */}
+                                        {Array.isArray(summary.summary) && summary.summary.length > 0 && (
+                                            <div className="space-y-2">
+                                                <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Key Takeaways</h4>
+                                                <ul className="space-y-2">
+                                                    {summary.summary.map((point, i) => (
+                                                        <li key={i} className="flex items-start bg-[#20202f]/20 p-2 rounded-lg border border-[#2a2a3f]/20">
+                                                            <span className="h-4.5 w-4.5 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-bold flex items-center justify-center mt-0.5 mr-2.5 flex-shrink-0">
+                                                                {i + 1}
+                                                            </span>
+                                                            <span className="text-xs text-gray-300 leading-relaxed font-normal">{point}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                        {/* Action Items List */}
+                                        {Array.isArray(summary.action_items) && summary.action_items.length > 0 && (
+                                            <div className="space-y-2">
+                                                <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">Action Items</h4>
+                                                <ul className="space-y-1.5">
+                                                    {summary.action_items.map((item, i) => (
+                                                        <li key={i} className="flex items-center gap-2 text-xs text-green-300 font-medium">
+                                                            <FiCheckSquare className="h-4 w-4 text-green-400 flex-shrink-0" />
+                                                            <span>{item}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                        {/* Export Action */}
+                                        <div className="flex justify-end pt-2">
+                                            <button
+                                                onClick={handleExportSummary}
+                                                className="px-4 py-2 text-xs font-bold bg-[#1d1d2b] border border-[#2a2a3f] hover:border-green-600/40 text-green-400 rounded-xl transition-all"
+                                            >
+                                                Export Summary (.md)
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Tab: Semantic Search */}
+                        {activeTab === 'search' && (
+                            <div className="animate-fadeIn">
+                                <SearchTest videoId={videoId} onResultClick={handleSeek} />
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -525,14 +530,6 @@ export default function VideoPlayer({ videoId, setVideoId }) {
                     </button>
                 </div>
             </div>
-
-            {/* Summary Modal */}
-            {showSummaryModal && (
-                <SummaryModal
-                    summary={summary}
-                    onClose={closeSummaryModal}
-                />
-            )}
         </div>
     );
 }
