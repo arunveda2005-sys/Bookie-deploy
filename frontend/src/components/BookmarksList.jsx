@@ -20,10 +20,12 @@ export default function BookmarksList({ bookmarks, onSeek, onAddBookmark }) {
     const renderAutoContext = (autoContext) => {
         if (!autoContext) return null;
         
+        let parsed = autoContext;
         if (typeof autoContext === 'string') {
             try {
-                autoContext = JSON.parse(autoContext);
+                parsed = JSON.parse(autoContext);
             } catch (e) {
+                // If it's a plain string and not JSON, just show it
                 return (
                     <p className="text-[11px] text-indigo-300/80 bg-indigo-950/20 p-2 rounded-lg border border-indigo-900/30 leading-relaxed mt-1">
                         {autoContext}
@@ -32,22 +34,36 @@ export default function BookmarksList({ bookmarks, onSeek, onAddBookmark }) {
             }
         }
 
+        // Don't show error-category fallbacks
+        if (parsed?.category === 'Error' || parsed?.title === 'Summary Generation Failed') {
+            return null;
+        }
+
         return (
             <div className="space-y-1 bg-indigo-950/20 p-2.5 rounded-lg border border-indigo-900/30 text-[11px] mt-1.5">
                 <div className="font-bold text-indigo-300 flex items-center gap-1">
                     <FiCpu className="h-3 w-3 text-indigo-400" />
-                    {autoContext.title || 'AI Insights'}
+                    {parsed.title || 'AI Insights'}
+                    {parsed.category && (
+                        <span className="ml-auto px-1.5 py-0.5 text-[9px] bg-indigo-900/30 text-indigo-400 rounded border border-indigo-800/30 uppercase tracking-wider font-bold">
+                            {parsed.category}
+                        </span>
+                    )}
                 </div>
-                {Array.isArray(autoContext.summary) && (
-                    <ul className="list-disc list-inside space-y-0.5 text-indigo-100/90 pl-0.5">
-                        {autoContext.summary.map((point, i) => (
-                            <li key={i} className="leading-relaxed truncate">{point}</li>
+                {Array.isArray(parsed.summary) && parsed.summary.length > 0 && (
+                    <ul className="space-y-1 text-indigo-100/80 pl-0.5 mt-1">
+                        {parsed.summary.map((point, i) => (
+                            <li key={i} className="flex items-start gap-1.5 leading-relaxed">
+                                <span className="flex-shrink-0 w-3.5 h-3.5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[8px] font-bold mt-0.5">{i+1}</span>
+                                <span>{point}</span>
+                            </li>
                         ))}
                     </ul>
                 )}
             </div>
         );
     };
+
 
     const handleSubmit = (e) => {
         e.preventDefault();

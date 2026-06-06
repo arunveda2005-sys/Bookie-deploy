@@ -213,21 +213,32 @@ async def create_bookmark(bookmark: BookmarkCreate):
     segments = db.get_transcript_segments(bookmark.video_id)
     transcript_snippet = get_transcript_context(segments, bookmark.timestamp)
     
-    # Generate AI summary
-    auto_context = ai_summarizer.generate_bookmark_context(
-        transcript_snippet, 
-        bookmark.timestamp
-    )
-    
-    # Convert auto_context to JSON string if it's a dictionary
-    auto_context_str = json.dumps(auto_context) if isinstance(auto_context, dict) else str(auto_context)
+    # Only generate AI summary if we have actual transcript text
+    auto_context = None
+    auto_context_str = None
+    if transcript_snippet and transcript_snippet.strip():
+        try:
+            auto_context = ai_summarizer.generate_bookmark_context(
+                transcript_snippet,
+                bookmark.timestamp
+            )
+            # Only store if it's a real result (not an error fallback)
+            if isinstance(auto_context, dict) and auto_context.get('category') != 'Error':
+                auto_context_str = json.dumps(auto_context)
+            else:
+                auto_context = None
+                auto_context_str = None
+        except Exception as e:
+            print(f"[WARN] Could not generate bookmark context: {e}")
+            auto_context = None
+            auto_context_str = None
     
     # Save bookmark
     bookmark_id = db.create_bookmark(
         video_id=bookmark.video_id,
         timestamp=bookmark.timestamp,
         user_note=bookmark.user_note,
-        auto_context=auto_context_str,  # Now passing a string, not a dict
+        auto_context=auto_context_str,
         transcript_snippet=transcript_snippet,
         tag=bookmark.tag
     )
@@ -438,7 +449,6 @@ async def summarize_video(video_id: int):
         print(f"[ERROR] {error_msg}")
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=error_msg)
         raise HTTPException(status_code=500, detail=error_msg)
 
 @app.get("/api/videos")
