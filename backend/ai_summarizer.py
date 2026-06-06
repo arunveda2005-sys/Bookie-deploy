@@ -310,7 +310,7 @@ class AISummarizer:
         return None
 
     def generate_video_summary(self, full_transcript: str) -> dict:
-        """Generate a concise summary of the video with title, category, and key points"""
+        """Generate a comprehensive summary of the video with title, category, and key points"""
         if not full_transcript.strip():
             return self._get_fallback_summary("Empty transcript provided")
             
@@ -319,28 +319,36 @@ class AISummarizer:
         
         try:
             prompt = f"""
-            Please analyze the following video transcript and provide a structured summary.
+            Please analyze the following video transcript and provide a highly detailed, comprehensive, and structured educational summary.
             
             Transcript:
             {transcript}
             
             Return the response in this exact JSON format:
             {{
-                "title": "Video Title",
-                "category": "General Category",
+                "title": "A descriptive, engaging title for the video summary",
+                "category": "Broad educational category (e.g. Science, Narrative, Design)",
+                "overview": "A thorough, comprehensive paragraph (4-6 sentences) summarizing the main concepts, narrative context, arguments, and overarching significance of the video content.",
                 "summary": [
-                    "Key point 1",
-                    "Key point 2",
-                    "Key point 3"
+                    "Descriptive key takeaway 1: A full, detailed sentence describing a major plot point, concept, or event from the video.",
+                    "Descriptive key takeaway 2: A full, detailed sentence describing a major plot point, concept, or event from the video.",
+                    "Descriptive key takeaway 3: A full, detailed sentence describing a major plot point, concept, or event from the video.",
+                    "Descriptive key takeaway 4: A full, detailed sentence describing a major plot point, concept, or event from the video.",
+                    "Descriptive key takeaway 5: A full, detailed sentence describing a major plot point, concept, or event from the video.",
+                    "Descriptive key takeaway 6: A full, detailed sentence describing a major plot point, concept, or event from the video."
                 ],
-                "learning_outcome": "Main learning outcome",
+                "learning_outcome": "A detailed explanation (2-3 sentences) of the primary learning objectives, moral lessons, or takeaways taught by the video.",
                 "action_items": [
-                    "Action item 1",
-                    "Action item 2"
+                    "Action Item 1: A specific, actionable step or practical lesson derived from the video content.",
+                    "Action Item 2: A specific, actionable step or practical lesson derived from the video content.",
+                    "Action Item 3: A specific, actionable step or practical lesson derived from the video content.",
+                    "Action Item 4: A specific, actionable step or practical lesson derived from the video content."
                 ]
             }}
             
-            Do not include any introductory or concluding text, only the raw JSON.
+            Guidelines:
+            1. Avoid short, single-word, or overly simple points. Make every bullet point and description informative and thorough.
+            2. Do not include any introductory or concluding text, only the raw JSON string.
             """
             
             text = self._generate_summary(prompt).strip()
@@ -371,6 +379,7 @@ class AISummarizer:
             result = {
                 "title": summary.get("title") or summary.get("Video Title") or "Video Summary",
                 "category": summary.get("category") or summary.get("General Category") or "General",
+                "overview": summary.get("overview") or summary.get("learning_outcome") or "No overview provided.",
                 "summary": summary.get("summary") or [],
                 "learning_outcome": summary.get("learning_outcome") or summary.get("Main learning outcome") or "Not specified",
                 "action_items": summary.get("action_items") or []
