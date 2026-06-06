@@ -119,7 +119,7 @@ export default function BookmarksList({ bookmarks, onSeek, onAddBookmark }) {
                                     <div className="flex items-center justify-between gap-1">
                                         <div className="flex items-center gap-1.5 min-w-0">
                                             <span className="text-xs font-bold text-[#eaeaf0] truncate">
-                                                {isAi ? 'Bookie AI' : 'Thomas Hope'}
+                                                {isAi ? 'Bookie AI' : 'Arun'}
                                             </span>
                                             <span className={`text-[8px] tracking-wider uppercase font-bold px-1.5 py-0.5 rounded border leading-none ${tagColors[bookmark.tag] || tagColors.custom}`}>
                                                 {bookmark.tag || 'note'}
