@@ -37,9 +37,15 @@ export default function VideoUpload({ onVideoUploaded }) {
     };
 
     const processFile = (file) => {
-        const validTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-matroska'];
-        if (!validTypes.includes(file.type)) {
-            setError('Please upload a valid video file (MP4, WebM, MKV)');
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        const validExtensions = ['mp4', 'webm', 'mov', 'mkv', 'mp3', 'wav', 'm4a', 'aac', 'ogg'];
+        const validMimeTypes = [
+            'video/mp4', 'video/webm', 'video/quicktime', 'video/x-matroska',
+            'audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/m4a', 'audio/x-m4a', 'audio/ogg', 'audio/aac'
+        ];
+
+        if (!validMimeTypes.includes(file.type) && !validExtensions.includes(fileExt)) {
+            setError('Please upload a valid video or audio file (MP4, WebM, MKV, MP3, WAV, M4A)');
             return;
         }
 
@@ -116,20 +122,20 @@ export default function VideoUpload({ onVideoUploaded }) {
                                     htmlFor="file-upload" 
                                     className="relative cursor-pointer font-bold text-blue-400 hover:text-blue-300 transition-colors focus-within:outline-none"
                                 >
-                                    <span>Upload a video file</span>
+                                    <span>Upload a video or audio file</span>
                                     <input 
                                         id="file-upload" 
                                         name="file-upload" 
                                         type="file" 
                                         className="sr-only"
-                                        accept="video/*"
+                                        accept="video/*,audio/*"
                                         onChange={handleFileChange}
                                         disabled={uploading}
                                     />
                                 </label>
                                 <span className="text-gray-400 font-normal"> or drag and drop it here</span>
                             </div>
-                            <p className="text-xs text-[#82829b] font-medium uppercase tracking-wider">MP4, WebM, or MKV up to 500MB</p>
+                            <p className="text-xs text-[#82829b] font-medium uppercase tracking-wider">MP4, WebM, MKV, MP3, WAV, or M4A up to 500MB</p>
                         </div>
                     ) : (
                         <div className="space-y-5 max-w-md mx-auto">

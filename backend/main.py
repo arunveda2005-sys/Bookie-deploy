@@ -110,7 +110,9 @@ async def process_video_background(video_id: int, video_path: str):
     try:
         # Lazy load Whisper (heavy model)
         if transcription_service is None:
-            transcription_service = TranscriptionService(model_size="base")
+            model_size = os.getenv("WHISPER_MODEL_SIZE", "tiny")
+            print(f"[INFO] Initializing Whisper model size: {model_size}")
+            transcription_service = TranscriptionService(model_size=model_size)
         
         # Transcribe
         segments = transcription_service.transcribe_video(video_path)
