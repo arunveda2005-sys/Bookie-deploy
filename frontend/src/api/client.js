@@ -1,6 +1,6 @@
 const API_BASE = import.meta.env.DEV
     ? 'http://localhost:8000/api'
-    : '/api';
+    : 'https://arunad005-bookie-backend.hf.space/api';
 
 export const api = {
     async uploadVideo(file) {
