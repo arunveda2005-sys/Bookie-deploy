@@ -4,7 +4,6 @@ import hashlib
 import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
-import google.generativeai as genai
 
 class RateLimitExceededError(Exception):
     """Raised when rate limit is exceeded"""
@@ -42,45 +41,83 @@ class AISummarizer:
         
     def _generate_summary(self, prompt: str) -> str:
         """
-        Generate a summary using the Gemini API with the given prompt.
-        
-        Args:
-            prompt: The prompt to send to the model
-            
-        Returns:
-            str: The generated summary text
+        Generate a summary using the configured LLM API.
         """
         try:
-            response = self.model.generate_content(prompt)
-            if not response or not response.text:
-                raise ValueError("Empty response from API")
-            return response.text.strip()
+            if self.provider == "huggingface":
+                response = self._rate_limited_call(
+                    lambda: self.client.chat_completion(
+                        messages=[{"role": "user", "content": prompt}],
+                        max_tokens=1000
+                    )
+                )
+                if not response or not response.choices:
+                    raise ValueError("Empty response from Hugging Face API")
+                return response.choices[0].message.content.strip()
+            elif self.provider == "gemini":
+                response = self._rate_limited_call(
+                    lambda: self.model.generate_content(prompt)
+                )
+                if not response or not response.text:
+                    raise ValueError("Empty response from Gemini API")
+                return response.text.strip()
+            else:
+                raise ValueError("No valid AI provider initialized")
         except Exception as e:
             print(f"Error in _generate_summary: {str(e)}")
             raise
         
     def __init__(self):
-        """Initialize AI summarizer with Gemini API"""
+        """Initialize AI summarizer with Hugging Face or Gemini API"""
         if hasattr(self, 'initialized'):
             return
             
+        self.hf_key = os.getenv("HF_API_KEY") or os.getenv("HUGGINGFACE_API_KEY") or os.getenv("HF_TOKEN")
         self.gemini_key = os.getenv("GEMINI_API_KEY")
-        if not self.gemini_key:
-            raise ValueError("GEMINI_API_KEY environment variable not set")
-            
-        try:
-            genai.configure(api_key=self.gemini_key)
-            self.model = genai.GenerativeModel('models/gemini-2.0-flash-001')
-            self._last_api_call = 0  # Initialize last API call time
-            
-            # Test the connection with retry
-            self._rate_limited_call(lambda: self.model.generate_content("Test connection"))
-            print("✓ Successfully connected to Gemini 1.5 Flash")
-            self.initialized = True
-            
-        except Exception as e:
-            print("❌ Failed to initialize Gemini:", str(e))
-            raise
+        
+        if self.hf_key:
+            try:
+                from huggingface_hub import InferenceClient
+                self.provider = "huggingface"
+                # Use Meta-Llama-3-8B-Instruct
+                self.model_name = "meta-llama/Meta-Llama-3-8B-Instruct"
+                self.client = InferenceClient(model=self.model_name, token=self.hf_key)
+                self._last_api_call = 0
+                
+                # Test connection
+                self._rate_limited_call(
+                    lambda: self.client.chat_completion(
+                        messages=[{"role": "user", "content": "Test connection"}],
+                        max_tokens=5
+                    )
+                )
+                print("✓ Successfully connected to Hugging Face Inference API")
+                self.initialized = True
+            except Exception as e:
+                print("❌ Failed to initialize Hugging Face:", str(e))
+                if self.gemini_key:
+                    print("Falling back to Gemini...")
+                else:
+                    raise
+                    
+        if not hasattr(self, 'initialized') and self.gemini_key:
+            try:
+                import google.generativeai as genai
+                self.provider = "gemini"
+                genai.configure(api_key=self.gemini_key)
+                self.model = genai.GenerativeModel('models/gemini-2.0-flash-001')
+                self._last_api_call = 0
+                
+                # Test connection
+                self._rate_limited_call(lambda: self.model.generate_content("Test connection"))
+                print("✓ Successfully connected to Gemini 2.0 Flash")
+                self.initialized = True
+            except Exception as e:
+                print("❌ Failed to initialize Gemini:", str(e))
+                raise
+                
+        if not hasattr(self, 'initialized'):
+            raise ValueError("Neither HF_API_KEY nor GEMINI_API_KEY environment variables are set")
 
     def generate_bookmark_context(self, transcript_snippet: str, timestamp: float) -> dict:
         """
@@ -160,20 +197,6 @@ class AISummarizer:
         except Exception as e:
             print(f"Error generating bookmark: {str(e)}")
             return self._get_fallback_summary(str(e))
-        
-        try:
-            summary = self._generate_summary(prompt)
-            # Clean up any formatting
-            summary = summary.replace('```', '').replace('json', '').strip()
-            # Take only first sentence
-            if '.' in summary:
-                summary = summary.split('.')[0] + '.'
-            # Limit length
-            return summary[:200]
-        except Exception as e:
-            # Fallback to first sentence
-            sentences = transcript_snippet.split('.')
-            return sentences[0].strip() + '.' if sentences else transcript_snippet[:100]
         
     def _clean_json_response(self, text: str) -> str:
         """Clean and extract JSON from the model's response.
@@ -267,13 +290,7 @@ class AISummarizer:
             }}
             """
             
-            response = self.model.generate_content(prompt)
-            
-            if not response or not response.text:
-                raise ValueError("Empty response from API")
-                
-            # Clean up the response
-            text = response.text.strip()
+            text = self._generate_summary(prompt)
             
             # Remove markdown code block markers if present
             if text.startswith('```json'):
@@ -301,7 +318,7 @@ class AISummarizer:
 
     def generate_flashcard(self, transcript_snippet: str) -> Dict[str, str]:
         """
-        Generate a flashcard (Q/A format) using Gemini.
+        Generate a flashcard (Q/A format).
         Raises an exception if generation fails.
         """
         if not transcript_snippet.strip():
@@ -323,11 +340,7 @@ class AISummarizer:
         {text}
         """.format(text=transcript_snippet.strip())
 
-        response = self.model.generate_content(prompt)
-        if not response or not response.text:
-            raise RuntimeError("Empty response from Gemini")
-            
-        content = response.text.strip()
+        content = self._generate_summary(prompt)
         
         # Parse the response
         lines = [line.strip() for line in content.split('\n') if line.strip()]

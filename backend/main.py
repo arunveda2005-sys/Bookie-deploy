@@ -2,6 +2,11 @@ import os
 import json
 from dotenv import load_dotenv
 
+# Ensure ffmpeg path is in environment PATH (useful if newly installed and not loaded by parent process)
+ffmpeg_dir = r"C:\Users\HP\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.1.1-full_build\bin"
+if os.path.exists(ffmpeg_dir) and ffmpeg_dir not in os.environ["PATH"]:
+    os.environ["PATH"] += os.pathsep + ffmpeg_dir
+
 # Load environment variables from .env file
 load_dotenv()
 

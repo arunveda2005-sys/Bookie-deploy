@@ -207,6 +207,7 @@ export default function VideoPlayer({ videoId }) {
     const [bookmarks, setBookmarks] = useState([]);
     const [videoInfo, setVideoInfo] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [summary, setSummary] = useState(null);
     const [showSummaryModal, setShowSummaryModal] = useState(false);
@@ -236,12 +237,16 @@ export default function VideoPlayer({ videoId }) {
                 const { bookmarks: existingBookmarks } = await api.getBookmarks(videoId);
                 setBookmarks(existingBookmarks);
                 setLoading(false);
+            } else if (video.status === 'error') {
+                setError('An error occurred during video transcription. Please try uploading a new copy.');
+                setLoading(false);
             } else {
                 // Poll for processing completion
                 setTimeout(loadVideoData, 3000);
             }
         } catch (err) {
             console.error('Failed to load video:', err);
+            setError(err.message || 'Failed to load video data');
             setLoading(false);
         }
     };
@@ -391,6 +396,18 @@ export default function VideoPlayer({ videoId }) {
     const closeSummaryModal = () => {
         setShowSummaryModal(false);
     };
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center min-h-[50vh] p-4">
+                <div className="text-center bg-gray-800/80 border border-red-500/30 p-8 rounded-2xl max-w-md shadow-xl backdrop-blur-sm">
+                    <div className="text-red-500 text-5xl mb-4">⚠️</div>
+                    <h3 className="text-xl font-bold text-white mb-2">Processing Failed</h3>
+                    <p className="text-gray-400 mb-6">{error}</p>
+                </div>
+            </div>
+        );
+    }
 
     if (loading) {
         return (
