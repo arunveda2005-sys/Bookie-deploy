@@ -258,6 +258,57 @@ class AISummarizer:
             ]
         }
 
+    def _manually_extract_fields(self, text: str) -> Optional[dict]:
+        """Manually extract fields from raw text when JSON parsing fails"""
+        try:
+            import re
+            summary = {}
+            
+            # Try to find Title
+            title_match = re.search(r'"title":\s*"([^"]+)"', text) or re.search(r'title:\s*([^\n]+)', text, re.IGNORECASE)
+            if title_match:
+                summary["title"] = title_match.group(1).strip().strip('"').strip("'")
+                
+            # Try to find Category
+            cat_match = re.search(r'"category":\s*"([^"]+)"', text) or re.search(r'category:\s*([^\n]+)', text, re.IGNORECASE)
+            if cat_match:
+                summary["category"] = cat_match.group(1).strip().strip('"').strip("'")
+                
+            # Try to find Learning Outcome
+            outcome_match = re.search(r'"learning_outcome":\s*"([^"]+)"', text) or re.search(r'learning_outcome:\s*([^\n]+)', text, re.IGNORECASE) or re.search(r'learning outcome:\s*([^\n]+)', text, re.IGNORECASE)
+            if outcome_match:
+                summary["learning_outcome"] = outcome_match.group(1).strip().strip('"').strip("'")
+                
+            # Try to find key takeaways / summary points
+            points = []
+            summary_array_match = re.search(r'"summary":\s*\[([\s\S]*?)\]', text)
+            if summary_array_match:
+                points = re.findall(r'"([^"]+)"', summary_array_match.group(1))
+            else:
+                summary_section = re.search(r'summary:([\s\S]*?)(?:learning|$)', text, re.IGNORECASE)
+                if summary_section:
+                    points = re.findall(r'(?:-|\*|\d+\.)\s*([^\n]+)', summary_section.group(1))
+            if points:
+                summary["summary"] = points
+                
+            # Try to find action items
+            action_items = []
+            action_array_match = re.search(r'"action_items":\s*\[([\s\S]*?)\]', text)
+            if action_array_match:
+                action_items = re.findall(r'"([^"]+)"', action_array_match.group(1))
+            else:
+                action_section = re.search(r'action_items:([\s\S]*?)(?:$)', text, re.IGNORECASE) or re.search(r'action items:([\s\S]*?)(?:$)', text, re.IGNORECASE)
+                if action_section:
+                    action_items = re.findall(r'(?:-|\*|\d+\.)\s*([^\n]+)', action_section.group(1))
+            if action_items:
+                summary["action_items"] = action_items
+                
+            if "title" in summary or "summary" in summary:
+                return summary
+        except Exception as e:
+            print(f"Error in manual extraction: {str(e)}")
+        return None
+
     def generate_video_summary(self, full_transcript: str) -> dict:
         """Generate a concise summary of the video with title, category, and key points"""
         if not full_transcript.strip():
@@ -288,29 +339,59 @@ class AISummarizer:
                     "Action item 2"
                 ]
             }}
+            
+            Do not include any introductory or concluding text, only the raw JSON.
             """
             
-            text = self._generate_summary(prompt)
+            text = self._generate_summary(prompt).strip()
             
-            # Remove markdown code block markers if present
-            if text.startswith('```json'):
-                text = text[7:]
-            if text.endswith('```'):
-                text = text[:-3]
+            import re
+            
+            # Find the JSON structure { ... } using regex
+            json_match = re.search(r'({[\s\S]*})', text)
+            if json_match:
+                json_str = json_match.group(1).strip()
+            else:
+                json_str = text
                 
             # Parse the JSON response
             try:
-                summary = json.loads(text)
-                
-                # Ensure all required fields are present
-                if not all(key in summary for key in ['title', 'category', 'summary', 'learning_outcome', 'action_items']):
-                    raise ValueError("Missing required fields in response")
-                    
-                return summary
-                
+                summary = json.loads(json_str)
             except json.JSONDecodeError:
-                # If JSON parsing fails, return a fallback
-                return self._get_fallback_summary("Failed to parse API response")
+                try:
+                    # Clean up common markdown/text around JSON strings
+                    cleaned = re.sub(r'//.*', '', json_str)  # Remove comments
+                    summary = json.loads(cleaned)
+                except Exception:
+                    summary = self._manually_extract_fields(text)
+                    if not summary:
+                        raise ValueError("Failed to parse API response as JSON or key-value text")
+            
+            # Ensure all required fields are present with defaults if missing
+            result = {
+                "title": summary.get("title") or summary.get("Video Title") or "Video Summary",
+                "category": summary.get("category") or summary.get("General Category") or "General",
+                "summary": summary.get("summary") or [],
+                "learning_outcome": summary.get("learning_outcome") or summary.get("Main learning outcome") or "Not specified",
+                "action_items": summary.get("action_items") or []
+            }
+            
+            # If summary list is empty, try to populate it
+            if not result["summary"]:
+                if "key_points" in summary:
+                    result["summary"] = summary["key_points"]
+                elif isinstance(summary.get("summary"), str):
+                    result["summary"] = [summary["summary"]]
+                else:
+                    result["summary"] = ["No key takeaways extracted."]
+                    
+            if not isinstance(result["summary"], list):
+                result["summary"] = [str(result["summary"])]
+                
+            if not isinstance(result["action_items"], list):
+                result["action_items"] = [str(result["action_items"])] if result["action_items"] else ["No action items specified."]
+                
+            return result
                 
         except Exception as e:
             print(f"Error generating summary: {str(e)}")
