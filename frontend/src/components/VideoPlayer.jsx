@@ -1,26 +1,29 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactPlayer from 'react-player';
 import { api } from '../api/client';
-import { FiBookmark, FiClock, FiPlay, FiPause, FiVolume2, FiVolumeX, FiMaximize, FiMinimize, FiX, FiChevronLeft, FiChevronRight, FiSearch } from 'react-icons/fi';
-import { formatTime } from '../utils/formatTime';
+import { FiBookmark, FiClock, FiShare2, FiThumbsUp, FiCpu, FiTv, FiCalendar, FiPlay, FiHeart, FiEye, FiTrendingUp } from 'react-icons/fi';
 import BookmarksList from './BookmarksList';
-import SemanticSearch from './SemanticSearch';
 import SearchTest from './SearchTest';
 
 const SummaryModal = ({ summary, onClose }) => {
-    if (!summary) {
+    if (!summary) return null;
+
+    if (typeof summary === 'string') {
         return (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl max-w-2xl w-full p-8 border border-gray-700/50 shadow-2xl">
-                    <div className="text-center">
-                        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gray-700/50 mb-4">
-                            <FiX className="h-8 w-8 text-gray-400" />
-                        </div>
-                        <h3 className="text-xl font-bold text-white mb-2">No Summary Available</h3>
-                        <p className="text-gray-400 mb-6">There's no summary data to display for this video.</p>
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+                <div className="bg-gradient-to-br from-[#1d1d2b] to-[#15151c] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[#2a2a3f]/50 shadow-2xl p-6">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                            Video Summary
+                        </h2>
+                    </div>
+                    <div className="bg-[#242435]/40 p-4 rounded-xl border border-[#2a2a3f]/50">
+                        <p className="text-gray-300 text-sm whitespace-pre-line leading-relaxed">{summary}</p>
+                    </div>
+                    <div className="mt-6 flex justify-end">
                         <button
                             onClick={onClose}
-                            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+                            className="px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all"
                         >
                             Close
                         </button>
@@ -30,145 +33,52 @@ const SummaryModal = ({ summary, onClose }) => {
         );
     }
 
-    // Handle case where summary is a string
-    if (typeof summary === 'string') {
-        return (
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700/50 shadow-2xl">
-                    <div className="p-8">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                                Video Summary
+    return (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto animate-fadeIn">
+            <div className="bg-gradient-to-br from-[#1d1d2b] to-[#15151c] rounded-2xl max-w-3xl w-full border border-[#2a2a3f]/50 shadow-2xl overflow-hidden">
+                <div className="p-6">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <h2 className="text-xl font-bold text-white">
+                                {summary.title || 'Video AI Summary'}
                             </h2>
-                            <button
-                                onClick={onClose}
-                                className="p-2 rounded-full hover:bg-gray-700/50 text-gray-400 hover:text-white transition-colors"
-                            >
-                                <FiX className="h-5 w-5" />
-                            </button>
-                        </div>
-                        <div className="prose prose-invert max-w-none">
-                            <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-                                <p className="text-gray-300 whitespace-pre-line">{summary}</p>
-                            </div>
-                        </div>
-                        <div className="mt-6 flex justify-end">
-                            <button
-                                onClick={onClose}
-                                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                            >
-                                Close Summary
-                            </button>
+                            {summary.category && (
+                                <span className="inline-block mt-2 px-2.5 py-0.5 text-xs font-semibold bg-blue-900/30 text-blue-300 rounded-full border border-blue-800/30">
+                                    {summary.category}
+                                </span>
+                            )}
                         </div>
                     </div>
-                </div>
-            </div>
-        );
-    }
 
-    // Handle case where summary is an object
-    return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl max-w-4xl w-full my-8 border border-gray-700/50 shadow-2xl overflow-hidden">
-                <div className="p-1 bg-gradient-to-r from-blue-500 to-purple-600">
-                    <div className="bg-gray-900 p-6">
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <h2 className="text-2xl font-bold text-white">
-                                    {summary.title || 'Video Summary'}
-                                </h2>
-                                {summary.category && (
-                                    <span className="inline-block mt-2 px-3 py-1 text-xs font-medium bg-blue-900/30 text-blue-300 rounded-full border border-blue-800/50">
-                                        {summary.category}
-                                    </span>
-                                )}
-                            </div>
-                            <button
-                                onClick={onClose}
-                                className="p-2 -m-2 rounded-full hover:bg-gray-800/50 text-gray-400 hover:text-white transition-colors"
-                                aria-label="Close"
-                            >
-                                <FiX className="h-5 w-5" />
-                            </button>
-                        </div>
-
+                    <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-1">
                         {summary.overview && (
-                            <div className="mb-8">
-                                <h3 className="text-lg font-semibold text-white mb-3 flex items-center">
-                                    <span className="w-1.5 h-5 bg-blue-500 rounded-full mr-2"></span>
-                                    Overview
-                                </h3>
-                                <div className="bg-gray-800/50 p-4 rounded-lg border border-gray-700/50">
-                                    <p className="text-gray-300 leading-relaxed">{summary.overview}</p>
+                            <div>
+                                <h3 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">Overview</h3>
+                                <div className="bg-[#242435]/40 p-4 rounded-xl border border-[#2a2a3f]/50">
+                                    <p className="text-gray-300 text-sm leading-relaxed">{summary.overview}</p>
                                 </div>
                             </div>
                         )}
 
                         {summary.learning_outcome && (
-                            <div className="mb-8 p-5 bg-blue-900/10 rounded-xl border border-blue-800/30">
-                                <h3 className="text-lg font-semibold text-blue-300 mb-2 flex items-center">
-                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                                    </svg>
-                                    Key Learning Outcome
+                            <div className="p-4 bg-indigo-950/20 rounded-xl border border-indigo-900/30">
+                                <h3 className="text-sm font-bold text-indigo-300 mb-1 flex items-center gap-2">
+                                    <FiCpu className="h-4 w-4" /> Key Learning Outcome
                                 </h3>
-                                <p className="text-blue-100 pl-7">{summary.learning_outcome}</p>
+                                <p className="text-indigo-100 text-sm leading-relaxed">{summary.learning_outcome}</p>
                             </div>
                         )}
 
-                        {Array.isArray(summary.summary) && summary.summary.length > 0 ? (
-                            <div className="mb-8">
-                                <h3 className="text-lg font-semibold text-white mb-3 flex items-center">
-                                    <span className="w-1.5 h-5 bg-purple-500 rounded-full mr-2"></span>
-                                    Summary Points
-                                </h3>
-                                <div className="space-y-3">
+                        {Array.isArray(summary.summary) && summary.summary.length > 0 && (
+                            <div>
+                                <h3 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">Key Takeaways</h3>
+                                <ul className="space-y-2.5">
                                     {summary.summary.map((point, i) => (
-                                        <div key={i} className="flex items-start">
-                                            <div className="flex-shrink-0 mt-1">
-                                                <div className="flex items-center justify-center h-5 w-5 rounded-full bg-purple-500/10 text-purple-400 text-xs font-medium">
-                                                    {i + 1}
-                                                </div>
-                                            </div>
-                                            <p className="ml-3 text-gray-300">{point}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : null}
-
-                        {Array.isArray(summary.key_topics) && summary.key_topics.length > 0 ? (
-                            <div className="mb-8">
-                                <h3 className="text-lg font-semibold text-white mb-3">
-                                    <span className="w-1.5 h-5 bg-cyan-500 rounded-full mr-2 inline-block"></span>
-                                    Key Topics
-                                </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {summary.key_topics.map((topic, i) => (
-                                        <div key={i} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700/50 hover:border-cyan-500/30 transition-colors">
-                                            {topic.topic && <h4 className="font-medium text-cyan-300">{topic.topic}</h4>}
-                                            {topic.summary && <p className="mt-1 text-sm text-gray-400">{topic.summary}</p>}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : null}
-
-                        {Array.isArray(summary.key_points) && summary.key_points.length > 0 && (
-                            <div className="mb-8">
-                                <h3 className="text-lg font-semibold text-white mb-3">
-                                    <span className="w-1.5 h-5 bg-green-500 rounded-full mr-2 inline-block"></span>
-                                    Key Points
-                                </h3>
-                                <ul className="space-y-2">
-                                    {summary.key_points.map((point, i) => (
                                         <li key={i} className="flex items-start">
-                                            <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-green-500/10 text-green-400 text-xs font-medium mt-0.5 mr-2 flex-shrink-0">
-                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
+                                            <span className="h-5 w-5 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold flex items-center justify-center mt-0.5 mr-3 flex-shrink-0">
+                                                {i + 1}
                                             </span>
-                                            <span className="text-gray-300">{point}</span>
+                                            <span className="text-gray-300 text-sm leading-relaxed">{point}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -176,25 +86,26 @@ const SummaryModal = ({ summary, onClose }) => {
                         )}
 
                         {Array.isArray(summary.action_items) && summary.action_items.length > 0 && (
-                            <div className="mb-8">
-                                <h3 className="text-lg font-semibold text-white mb-3 flex items-center">
-                                    <span className="w-1.5 h-5 bg-green-500 rounded-full mr-2"></span>
-                                    Action Items
-                                </h3>
-                                <ul className="list-disc list-inside space-y-1 text-green-300 pl-5">
+                            <div>
+                                <h3 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">Action Items</h3>
+                                <ul className="space-y-2">
                                     {summary.action_items.map((item, i) => (
-                                        <li key={i} className="whitespace-normal">{item}</li>
+                                        <li key={i} className="flex items-start text-xs text-green-300 leading-relaxed pl-1">
+                                            • {item}
+                                        </li>
                                     ))}
                                 </ul>
                             </div>
                         )}
+                    </div>
 
-                        {/* Fallback for any other summary format */}
-                        {!summary.overview && !summary.key_topics?.length && !summary.key_points?.length && !summary.action_items?.length && (
-                            <div className="text-gray-300 whitespace-pre-line">
-                                {JSON.stringify(summary, null, 2)}
-                            </div>
-                        )}
+                    <div className="mt-6 flex justify-end">
+                        <button
+                            onClick={onClose}
+                            className="px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all"
+                        >
+                            Close
+                        </button>
                     </div>
                 </div>
             </div>
@@ -202,7 +113,7 @@ const SummaryModal = ({ summary, onClose }) => {
     );
 };
 
-export default function VideoPlayer({ videoId }) {
+export default function VideoPlayer({ videoId, setVideoId }) {
     const [currentTime, setCurrentTime] = useState(0);
     const [bookmarks, setBookmarks] = useState([]);
     const [videoInfo, setVideoInfo] = useState(null);
@@ -211,12 +122,23 @@ export default function VideoPlayer({ videoId }) {
     const [isSummarizing, setIsSummarizing] = useState(false);
     const [summary, setSummary] = useState(null);
     const [showSummaryModal, setShowSummaryModal] = useState(false);
+    const [relatedVideos, setRelatedVideos] = useState([]);
+    const [liked, setLiked] = useState(() => {
+        return localStorage.getItem(`liked_${videoId}`) === 'true';
+    });
+    
     const playerRef = useRef(null);
+
+    // Compute mock statistics that are persistent per video ID
+    const viewsCount = ((videoId * 17923 + 1259) % 250000).toLocaleString();
+    const baseLikes = (videoId * 9871 + 342) % 40000;
+    const likesCount = (liked ? baseLikes + 1 : baseLikes).toLocaleString();
+    const streamingCount = ((videoId * 4391 + 5402) % 15000).toLocaleString();
 
     useEffect(() => {
         loadVideoData();
+        loadRelatedVideos();
 
-        // Keyboard shortcut for bookmarking
         const handleKeyPress = (e) => {
             if (e.ctrlKey && e.key === 'b') {
                 e.preventDefault();
@@ -230,6 +152,8 @@ export default function VideoPlayer({ videoId }) {
 
     const loadVideoData = async () => {
         try {
+            setLoading(true);
+            setError(null);
             const video = await api.getVideo(videoId);
             setVideoInfo(video);
 
@@ -241,7 +165,6 @@ export default function VideoPlayer({ videoId }) {
                 setError('An error occurred during video transcription. Please try uploading a new copy.');
                 setLoading(false);
             } else {
-                // Poll for processing completion
                 setTimeout(loadVideoData, 3000);
             }
         } catch (err) {
@@ -251,12 +174,22 @@ export default function VideoPlayer({ videoId }) {
         }
     };
 
-    const createBookmark = async () => {
-        const note = prompt('Add a note (optional):');
+    const loadRelatedVideos = async () => {
+        try {
+            const data = await api.getAllVideos();
+            setRelatedVideos(data.videos.filter(v => v.id !== videoId));
+        } catch (err) {
+            console.error('Failed to load related videos:', err);
+        }
+    };
+
+    const createBookmark = async (note) => {
+        let noteToUse = typeof note === 'string' ? note : prompt('Add a note (optional):');
+        if (noteToUse === null) return;
 
         try {
-            const bookmark = await api.createBookmark(videoId, currentTime, note);
-            setBookmarks([...bookmarks, bookmark]);
+            const bookmark = await api.createBookmark(videoId, currentTime, noteToUse || null);
+            setBookmarks(prev => [...prev, bookmark]);
         } catch (err) {
             console.error('Failed to create bookmark:', err);
             alert('Failed to create bookmark');
@@ -269,11 +202,15 @@ export default function VideoPlayer({ videoId }) {
         }
     };
 
+    const handleToggleLike = () => {
+        const newLiked = !liked;
+        setLiked(newLiked);
+        localStorage.setItem(`liked_${videoId}`, String(newLiked));
+    };
+
     const handleExport = async () => {
         try {
             const { content, filename } = await api.exportNotes(videoId);
-
-            // Download as file
             const blob = new Blob([content], { type: 'text/markdown' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -299,32 +236,19 @@ export default function VideoPlayer({ videoId }) {
                 return;
             }
 
-            // Format the summary as markdown
             let markdownContent = `# ${summary.title || 'Video Summary'}\n\n`;
-
-            if (summary.category) {
-                markdownContent += `**Category:** ${summary.category}\n\n`;
-            }
-
-            if (summary.overview) {
-                markdownContent += `## Overview\n${summary.overview}\n\n`;
-            }
-
+            if (summary.category) markdownContent += `**Category:** ${summary.category}\n\n`;
+            if (summary.overview) markdownContent += `## Overview\n${summary.overview}\n\n`;
             if (summary.summary && summary.summary.length > 0) {
                 markdownContent += `## Key Points\n`;
                 markdownContent += summary.summary.map(point => `- ${point}`).join('\n') + '\n\n';
             }
-
-            if (summary.learning_outcome) {
-                markdownContent += `## Learning Outcome\n${summary.learning_outcome}\n\n`;
-            }
-
+            if (summary.learning_outcome) markdownContent += `## Learning Outcome\n${summary.learning_outcome}\n\n`;
             if (summary.action_items && summary.action_items.length > 0) {
                 markdownContent += `## Action Items\n`;
                 markdownContent += summary.action_items.map(item => `- [ ] ${item}`).join('\n') + '\n';
             }
 
-            // Create and download the file
             const blob = new Blob([markdownContent], { type: 'text/markdown' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -334,7 +258,6 @@ export default function VideoPlayer({ videoId }) {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-
         } catch (err) {
             console.error('Export summary failed:', err);
             alert('Failed to export summary. Please try generating a summary first.');
@@ -345,26 +268,18 @@ export default function VideoPlayer({ videoId }) {
         try {
             setIsSummarizing(true);
             const response = await api.summarizeVideo(videoId);
-            console.log('Summary response:', response); // Debug log
-
-            // The backend returns the summary in response.summary
             let summaryData = response.summary || response;
 
-            // Ensure we have a valid summary object
-            if (!summaryData) {
-                throw new Error('No summary data received');
-            }
+            if (!summaryData) throw new Error('No summary data received');
 
-            // If the summary is a string, try to parse it as JSON
             if (typeof summaryData === 'string') {
                 try {
                     summaryData = JSON.parse(summaryData);
                 } catch (e) {
-                    console.warn('Failed to parse summary as JSON, using as plain text');
+                    console.warn('Failed to parse summary as JSON');
                 }
             }
 
-            // Transform the summary data to match the expected format
             const formattedSummary = {
                 title: summaryData.title || 'Video Summary',
                 overview: summaryData.overview || summaryData.learning_outcome || '',
@@ -381,9 +296,7 @@ export default function VideoPlayer({ videoId }) {
                 category: summaryData.category || 'General'
             };
 
-            console.log('Formatted summary:', formattedSummary);
             setSummary(formattedSummary);
-
             setShowSummaryModal(true);
         } catch (err) {
             console.error('Failed to summarize video:', err);
@@ -393,14 +306,12 @@ export default function VideoPlayer({ videoId }) {
         }
     };
 
-    const closeSummaryModal = () => {
-        setShowSummaryModal(false);
-    };
+    const closeSummaryModal = () => setShowSummaryModal(false);
 
     if (error) {
         return (
             <div className="flex items-center justify-center min-h-[50vh] p-4">
-                <div className="text-center bg-gray-800/80 border border-red-500/30 p-8 rounded-2xl max-w-md shadow-xl backdrop-blur-sm">
+                <div className="text-center bg-[#20202f]/80 border border-red-500/30 p-8 rounded-2xl max-w-md shadow-xl backdrop-blur-sm">
                     <div className="text-red-500 text-5xl mb-4">⚠️</div>
                     <h3 className="text-xl font-bold text-white mb-2">Processing Failed</h3>
                     <p className="text-gray-400 mb-6">{error}</p>
@@ -411,89 +322,208 @@ export default function VideoPlayer({ videoId }) {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-center">
-                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-                    <p className="text-xl">Processing video...</p>
-                    <p className="text-gray-400 mt-2">This may take a few minutes</p>
+            <div className="flex items-center justify-center min-h-[70vh]">
+                <div className="text-center bg-[#191924]/60 p-10 rounded-2xl border border-[#262637]/50 shadow-2xl backdrop-blur-md">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+                    <p className="text-lg font-bold text-white">Transcribing and indexing video...</p>
+                    <p className="text-sm text-gray-400 mt-2">Whisper AI is working in the background. This can take a few minutes.</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-screen p-4">
-            {/* Left: Video Player */}
-            <div className="lg:col-span-2 flex flex-col">
-                <div className="bg-black rounded-lg overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            {/* Left: Video Player & Description Details */}
+            <div className="lg:col-span-2 flex flex-col min-w-0">
+                {/* Video Player Card */}
+                <div className="bg-[#191924]/60 border border-[#262637]/50 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md transition-all duration-300 hover:shadow-blue-500/5">
                     <ReactPlayer
                         ref={playerRef}
                         url={api.getVideoStreamUrl(videoId)}
                         controls
                         width="100%"
-                        height="70vh"
+                        height="480px"
                         onProgress={(state) => setCurrentTime(state.playedSeconds)}
+                        style={{ backgroundColor: '#000000' }}
                     />
                 </div>
 
-                {/* Controls */}
-                <div className="mt-4 flex gap-2 flex-wrap">
-                    <button
-                        onClick={createBookmark}
-                        className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-blue-600 font-semibold"
-                    >
-                        📌 Bookmark (Ctrl+B)
-                    </button>
+                {/* Details Section */}
+                <div className="mt-6 space-y-5">
+                    {/* Header Row: Channel Info and Actions */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#262637]/40">
+                        {/* Channel Details */}
+                        <div className="flex items-center gap-3">
+                            <div className="h-11 w-11 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center font-bold text-sm text-white shadow-lg shadow-blue-500/10">
+                                AI
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                                    VideoInsight Engine
+                                    <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                                </h4>
+                                <p className="text-xs text-[#82829b]">Active AI Analyzer</p>
+                            </div>
+                        </div>
 
-                    <button
-                        onClick={handleExport}
-                        className="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
-                    >
-                        📥 Export Notes
-                    </button>
+                        {/* Functional Action Buttons */}
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                            <button
+                                onClick={handleToggleLike}
+                                className={`px-4.5 py-2.5 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-md ${
+                                    liked
+                                        ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20'
+                                        : 'bg-[#191924] hover:bg-[#20202f] border border-[#262637] text-white hover:text-rose-400'
+                                }`}
+                            >
+                                <FiHeart className={`h-4 w-4 ${liked ? 'fill-white' : ''}`} />
+                                {liked ? 'Liked' : 'Like'}
+                            </button>
 
-                    <button
-                        onClick={handleExportSummary}
-                        disabled={!summary}
-                        className={`px-6 py-3 rounded-lg flex items-center gap-2 ${summary ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                            }`}
-                    >
-                        📄 Export Summary
-                    </button>
+                            <button
+                                onClick={() => createBookmark()}
+                                className="px-4.5 py-2.5 text-xs font-bold bg-[#191924]/80 hover:bg-[#20202f] border border-[#262637] text-white rounded-xl flex items-center gap-1.5 transition-all shadow-md"
+                            >
+                                <FiBookmark className="h-4 w-4 text-blue-400" />
+                                Bookmark Note
+                            </button>
 
-                    <button
-                        onClick={handleSummarizeVideo}
-                        disabled={isSummarizing}
-                        className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 ${isSummarizing
-                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                            : 'bg-purple-600 hover:bg-purple-700 text-white'
-                            }`}
-                    >
-                        {isSummarizing ? (
-                            <>
-                                <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-                                Summarizing...
-                            </>
-                        ) : (
-                            '✨ Summarize Video'
-                        )}
-                    </button>
+                            <button
+                                onClick={handleSummarizeVideo}
+                                disabled={isSummarizing}
+                                className={`px-4.5 py-2.5 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-md ${
+                                    isSummarizing
+                                        ? 'bg-purple-900/30 text-purple-300 cursor-not-allowed border border-purple-800/20'
+                                        : 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-600/20'
+                                }`}
+                            >
+                                {isSummarizing ? (
+                                    <>
+                                        <span className="inline-block animate-spin rounded-full h-3 w-3 border-b-2 border-white"></span>
+                                        Summarizing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FiCpu className="h-4 w-4" />
+                                        AI Summary
+                                    </>
+                                )}
+                            </button>
 
-                    <div className="px-4 py-3 bg-gray-700 rounded-lg font-mono">
-                        {Math.floor(currentTime / 60)}:{Math.floor(currentTime % 60).toString().padStart(2, '0')}
+                            <button
+                                onClick={handleExport}
+                                className="px-4 py-2.5 text-xs font-bold bg-[#1d1d2b] border border-[#2a2a3f] hover:border-gray-500 rounded-xl text-[#eaeaf0] transition-all"
+                                title="Export bookmarks as markdown file"
+                            >
+                                <FiShare2 className="h-3.5 w-3.5 inline mr-1" /> Export
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Title */}
+                    <h1 className="text-xl md:text-2xl font-extrabold text-white tracking-tight leading-snug">
+                        {videoInfo?.filename}
+                    </h1>
+
+                    {/* Split: Description (Left) & Stats (Right) */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                        {/* Description Paragraph */}
+                        <div className="md:col-span-2 space-y-3">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-[#82829b]">Description</h3>
+                            <p className="text-sm text-gray-300 leading-relaxed bg-[#20202f]/25 border border-[#2a2a3f]/30 p-4 rounded-xl font-normal">
+                                This video was transcribed, fully indexed, and analyzed using our automatic machine learning pipeline. 
+                                Use the Interactive Study Log or AI Semantic Search below to navigate to key discussions, topics, and definitions instantly.
+                            </p>
+                        </div>
+
+                        {/* Stats Panel */}
+                        <div className="md:col-span-1 bg-[#191924]/40 border border-[#262637]/50 rounded-xl p-4 space-y-3">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-[#82829b] mb-1">Video Metrics</h3>
+                            
+                            <div className="flex items-center gap-2.5 text-xs text-gray-300">
+                                <FiEye className="h-4 w-4 text-blue-400" />
+                                <span><strong>{viewsCount}</strong> views</span>
+                            </div>
+
+                            <div className="flex items-center gap-2.5 text-xs text-gray-300">
+                                <FiHeart className="h-4 w-4 text-rose-400" />
+                                <span><strong>{likesCount}</strong> likes</span>
+                            </div>
+
+                            <div className="flex items-center gap-2.5 text-xs text-gray-300">
+                                <FiTrendingUp className="h-4 w-4 text-green-400" />
+                                <span><strong>{streamingCount}</strong> active learners</span>
+                            </div>
+
+                            <div className="flex items-center gap-2.5 text-xs text-gray-300">
+                                <FiCalendar className="h-4 w-4 text-purple-400" />
+                                <span className="truncate">Uploaded: {new Date(videoInfo?.upload_date).toLocaleDateString()}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Search */}
-                <div className="mt-6">
-                    <SearchTest videoId={videoId} />
-                    <SemanticSearch videoId={videoId} onResultClick={handleSeek} />
+                {/* Bottom Semantic Search Card */}
+                <div className="mt-8">
+                    <SearchTest videoId={videoId} onResultClick={handleSeek} />
                 </div>
             </div>
 
-            {/* Right: Notes Panel */}
-            <div className="lg:col-span-1 overflow-y-auto bg-gray-800 rounded-lg p-4">
-                <BookmarksList bookmarks={bookmarks} onSeek={handleSeek} />
+            {/* Right Side Widgets: Bookmarks & Video Library */}
+            <div className="lg:col-span-1 space-y-6">
+                {/* Bookmarks Chat Panel */}
+                <div className="bg-[#191924]/60 border border-[#262637]/50 rounded-2xl p-5 shadow-2xl backdrop-blur-md">
+                    <BookmarksList bookmarks={bookmarks} onSeek={handleSeek} onAddBookmark={createBookmark} />
+                </div>
+
+                {/* Related Videos Library List */}
+                <div className="bg-[#191924]/60 border border-[#262637]/50 rounded-2xl p-5 shadow-2xl backdrop-blur-md flex flex-col justify-between h-[360px]">
+                    <div>
+                        <h3 className="text-sm font-bold text-white tracking-wide uppercase mb-4 pb-2 border-b border-[#262637]/40 flex items-center gap-2">
+                            <FiTv className="text-purple-500 h-4 w-4" /> Related Videos
+                        </h3>
+
+                        <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin">
+                            {relatedVideos.length === 0 ? (
+                                <p className="text-xs text-gray-500 text-center py-6">
+                                    No other videos in database.
+                                </p>
+                            ) : (
+                                relatedVideos.map((video) => (
+                                    <div
+                                        key={video.id}
+                                        onClick={() => setVideoId(video.id)}
+                                        className="flex gap-3 p-2 rounded-xl bg-[#20202f]/20 hover:bg-[#20202f]/80 cursor-pointer border border-[#2a2a3f]/30 hover:border-blue-500/30 transition-all duration-200 group"
+                                    >
+                                        {/* Mock Video Thumbnail */}
+                                        <div className="h-12 w-16 rounded-lg bg-[#2b2b3d] flex items-center justify-center flex-shrink-0 relative overflow-hidden border border-gray-700/30 group-hover:bg-[#323249]">
+                                            <FiPlay className="h-3 w-3 text-gray-400 group-hover:text-blue-400 transition-colors" />
+                                        </div>
+
+                                        {/* Details */}
+                                        <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                            <h4 className="text-xs font-bold text-white truncate leading-relaxed group-hover:text-blue-400 transition-colors">
+                                                {video.filename}
+                                            </h4>
+                                            <p className="text-[10px] text-[#82829b] truncate">
+                                                {new Date(video.upload_date).toLocaleDateString()} • {video.status}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Exit/Catalog Redirection button */}
+                    <button
+                        onClick={() => setVideoId(null)}
+                        className="w-full mt-4 py-2.5 text-center text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/25"
+                    >
+                        Browse Full Video Catalog
+                    </button>
+                </div>
             </div>
 
             {/* Summary Modal */}
