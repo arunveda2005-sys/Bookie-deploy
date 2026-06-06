@@ -114,9 +114,9 @@ function App() {
                         )}
                         <div className="flex items-center gap-2 bg-[#1d1d2b]/60 border border-[#2a2a3f]/40 px-3 py-1.5 rounded-xl cursor-pointer hover:bg-[#20202f] transition-all">
                             <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center text-xs font-semibold text-white">
-                                T
+                                A
                             </div>
-                            <span className="text-xs font-semibold text-[#eaeaf0] hidden sm:inline">Thomas Hope</span>
+                            <span className="text-xs font-semibold text-[#eaeaf0] hidden sm:inline">Arun</span>
                             <FiChevronDown className="h-3 w-3 text-gray-400" />
                         </div>
                     </div>
